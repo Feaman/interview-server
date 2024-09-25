@@ -83,6 +83,7 @@ export default class UsersService extends BaseService {
           email : userDBData.email,
           photoPath : userDBData.photo_path,
           password : userDBData.password,
+          passwordHash : userDBData.password_hash,
         }
 
         resolve(new UserModel(userData))

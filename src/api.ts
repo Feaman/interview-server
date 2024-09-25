@@ -99,9 +99,17 @@ app.post(
       const currentUser = await UsersService.login(request.body)
       const candidates = await CandidatesService.getList(currentUser)
 
+      const userData = {
+        id: currentUser.id,
+        firstName: currentUser.firstName,
+        secondName: currentUser.secondName,
+        email: currentUser.email,
+        photoPath: currentUser.photoPath,
+      }
+
       response.status(200).json({
         candidates,
-        user: currentUser,
+        user: userData,
         token: jwt.sign({ id: currentUser.id }, RequestService.TOKEN_KEY),
       })
     } catch (error: any) {
@@ -115,16 +123,24 @@ app.post(
   upload.single('photo'),
   async (request: Request, response: Response) => {
     try {
-      const user = await UsersService.create(request.body)
-      const candidates = await CandidatesService.getList(user)
-
       // Photo
       const photoFile = (request as MulterRequest).file
       request.body.photoPath = photoFile ? photoFile.path : ''
 
+      const user = await UsersService.create(request.body)
+      const candidates = await CandidatesService.getList(user)
+
+      const userData = {
+        id: user.id,
+        firstName: user.firstName,
+        secondName: user.secondName,
+        email: user.email,
+        photoPath: user.photoPath,
+      }
+
       response.status(200).json({
         candidates,
-        user,
+        user: userData,
         token: jwt.sign({ id: user.id }, RequestService.TOKEN_KEY),
       })
     } catch (error: any) {
@@ -135,6 +151,7 @@ app.post(
 
 app.put(
   '/users',
+  checkAccess,
   upload.single('photo'),
   async (request: Request, response: Response) => {
     try {
@@ -145,7 +162,13 @@ app.put(
       request.body.photoPath = photoFile ? photoFile.path : ''
 
       const user = await UsersService.update(request.body, currentUser)
-      return response.send(user)
+      return response.send({
+        id: user.id,
+        firstName: user.firstName,
+        secondName: user.secondName,
+        email: user.email,
+        photoPath: user.photoPath,
+      })
     } catch (error: any) {
       return response.status(500).send({ statusCode: 500, message: error.message })
     }
