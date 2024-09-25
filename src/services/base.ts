@@ -10,7 +10,7 @@ export default class BaseService {
       socketPath: "/var/lib/mysql/mysql.sock",
       user: mySqlUser,
       password: mySqlUserPassword,
-      database: "pavlo",
+      database: "interview",
     })
   }
 }

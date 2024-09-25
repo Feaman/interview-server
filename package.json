@@ -1,7 +1,7 @@
 {
-  "name": "pavlo-ru-server",
+  "name": "interview-api",
   "version": "0.0.1",
-  "description": "pavlo.ru server",
+  "description": "interview api server",
   "main": "src/api.ts",
   "scripts": {
     "build": "webpack --config webpack.config.js"

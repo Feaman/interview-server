@@ -12,7 +12,7 @@ export default class BaseModel {
   }
 
   validateField (field: string): boolean {
-    const validation = new Validator(this, { [field]: this.rules[field]})
+    const validation = new Validator(this, { [field]: this.rules[field] })
     return !!validation.passes()
   }
 }

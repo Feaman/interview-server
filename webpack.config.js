@@ -33,7 +33,7 @@ module.exports = {
     },
   },
   output: {
-    filename: "pavlo-api.js",
+    filename: "interview-api.js",
     path: path.resolve(__dirname, "./dist"),
   },
 }

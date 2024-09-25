@@ -2,6 +2,8 @@ import { MysqlError, OkPacket } from 'mysql'
 import UserModel, { IUser, IUserDB } from '~/models/user'
 import BaseService from '~/services/base'
 
+const fs = require('fs')
+
 export default class UsersService extends BaseService {
   static async create (userData: IUser): Promise<UserModel> {
     const existentUser = await this.findByEmail(userData.email)
@@ -10,6 +12,31 @@ export default class UsersService extends BaseService {
     }
 
     return UsersService.save(new UserModel(userData))
+  }
+
+  static async update (data: IUser, currentUser: UserModel): Promise<UserModel> {
+    const user = await this.findById(String(currentUser.id))
+    if (!user) {
+      throw new Error('User not found')
+    }
+
+    try {
+      if (data.photoPath && user.photoPath) {
+        fs.unlinkSync(user.photoPath)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+
+    user.email = data.email
+    user.password = data.password
+    user.firstName = data.firstName
+    user.secondName = data.secondName
+    if (data.photoPath) {
+      user.photoPath = data.photoPath 
+    }
+
+    return this.save(user)
   }
 
   static async login (userData: IUser): Promise<UserModel> {
@@ -90,9 +117,9 @@ export default class UsersService extends BaseService {
           resolve(user)
         })
       } else {
-        const queryParams = [user.firstName, user.secondName, user.email, user.passwordHash, user.id]
+        const queryParams = [user.firstName, user.secondName, user.email, user.photoPath,user.passwordHash, user.id]
         BaseService.pool.query(
-          'update notes set first_name = ?, second_name = ?, email = ?, password_hash = ? where id = ?',
+          'update users set first_name = ?, second_name = ?, email = ?, photo_path = ?, password_hash = ? where id = ?',
           queryParams,
           (error: MysqlError | null) => {
             if (error) {

@@ -67,6 +67,7 @@ app.use(async (request: Request, _response: Response, next: NextFunction) => {
         firstName: currentUser.firstName,
         secondName: currentUser.secondName,
         email: currentUser.email,
+        photoPath: currentUser.photoPath,
       }
     )
 
@@ -132,6 +133,25 @@ app.post(
   },
 )
 
+app.put(
+  '/users',
+  upload.single('photo'),
+  async (request: Request, response: Response) => {
+    try {
+      const currentUser = storage.get(request)
+
+      // Photo
+      const photoFile = (request as MulterRequest).file
+      request.body.photoPath = photoFile ? photoFile.path : ''
+
+      const candidate = await UsersService.update(request.body, currentUser)
+      return response.send(candidate)
+    } catch (error: any) {
+      return response.status(500).send({ statusCode: 500, message: error.message })
+    }
+  },
+)
+
 app.post(
   '/candidates',
   checkAccess,
@@ -164,8 +184,7 @@ app.put(
       const photoFile = (request as MulterRequest).file
       request.body.photoPath = photoFile ? photoFile.path : ''
 
-      const { candidateId } = request.params
-      const candidate = await CandidatesService.update(candidateId, request.body, currentUser)
+      const candidate = await CandidatesService.update(request.params.candidateId, request.body, currentUser)
       return response.send(candidate)
     } catch (error: any) {
       return response.status(500).send({ statusCode: 500, message: error.message })
