@@ -6,7 +6,7 @@ export interface IUser {
   secondName: string,
   email: string,
   photoPath: string,
-  passwordHash: string,
+  passwordHash?: string,
   password: string,
 }
 
@@ -50,7 +50,7 @@ export default class UserModel extends BaseModel {
     this.secondName = data.secondName
     this.email = data.email
     this.photoPath = data.photoPath
-    this.passwordHash = data.passwordHash
+    this.passwordHash = data.passwordHash || ''
     this.password = data.password
   }
 

@@ -82,7 +82,6 @@ export default class UsersService extends BaseService {
           secondName : userDBData.second_name,
           email : userDBData.email,
           photoPath : userDBData.photo_path,
-          passwordHash : userDBData.password_hash,
           password : userDBData.password,
         }
 
@@ -117,7 +116,8 @@ export default class UsersService extends BaseService {
           resolve(user)
         })
       } else {
-        const queryParams = [user.firstName, user.secondName, user.email, user.photoPath,user.passwordHash, user.id]
+        const passwordHash = UserModel.hashPassword(user.password)
+        const queryParams = [user.firstName, user.secondName, user.email, user.photoPath, passwordHash, user.id]
         BaseService.pool.query(
           'update users set first_name = ?, second_name = ?, email = ?, photo_path = ?, password_hash = ? where id = ?',
           queryParams,

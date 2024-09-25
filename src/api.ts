@@ -144,8 +144,8 @@ app.put(
       const photoFile = (request as MulterRequest).file
       request.body.photoPath = photoFile ? photoFile.path : ''
 
-      const candidate = await UsersService.update(request.body, currentUser)
-      return response.send(candidate)
+      const user = await UsersService.update(request.body, currentUser)
+      return response.send(user)
     } catch (error: any) {
       return response.status(500).send({ statusCode: 500, message: error.message })
     }
