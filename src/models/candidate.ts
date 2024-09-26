@@ -2,7 +2,8 @@ import BaseModel from './base'
 
 export interface ICandidate {
   id: number,
-  name: string,
+  firstName: string,
+  secondName: string,
   photoPath: string,
   data: string,
   created: string,
@@ -10,7 +11,8 @@ export interface ICandidate {
 
 export interface ICandidateDB {
   id: number,
-  name: string,
+  first_name: string,
+  second_name: string,
   photo_path: string,
   data: string,
   created: string,
@@ -18,14 +20,16 @@ export interface ICandidateDB {
 
 export default class CandidateModel extends BaseModel {
   id: number
-  name: string
+  firstName: string
+  secondName: string
   photoPath: string
   data: string
   created: string
 
   static rules = {
     id: 'numeric',
-    name: 'required|string',
+    firstName: 'required|string',
+    secondName: 'required|string',
     data: 'required|string',
     photoPath: 'string',
   }
@@ -33,7 +37,8 @@ export default class CandidateModel extends BaseModel {
   constructor (data: ICandidate) {
     super()
     this.id = data.id
-    this.name = data.name
+    this.firstName = data.firstName
+    this.secondName = data.secondName
     this.photoPath = data.photoPath
     this.data = data.data
     this.created = data.created

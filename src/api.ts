@@ -1,9 +1,12 @@
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
+import CandidateModel from './models/candidate'
+import TemplateModel from './models/template'
 import BaseService from './services/base'
 import CandidatesService from './services/candidates'
 import RequestService from './services/request'
+import TemplatesService from './services/templates'
 import UsersService from './services/users'
  
 const PORT = 3016
@@ -72,8 +75,8 @@ app.use(async (request: Request, _response: Response, next: NextFunction) => {
     )
 
     next()
-  } catch (error: any) {
-    return next(error)
+  } catch (error) {
+    return next(error as Error)
   }
 })
 
@@ -85,9 +88,9 @@ app.get(
       const currentUser = storage.get(request)
       const candidates = await CandidatesService.getList(currentUser )
 
-      return response.status(200).json({ candidates, user: currentUser  })
-    } catch (error: any) {
-      return next(error)
+      return response.status(200).json({ candidates, user: currentUser })
+    } catch (error) {
+      return next(error as Error)
     }
   },
 )
@@ -112,8 +115,8 @@ app.post(
         user: userData,
         token: jwt.sign({ id: currentUser.id }, RequestService.TOKEN_KEY),
       })
-    } catch (error: any) {
-      return response.status(400).send({ statusCode: 400, message: error.message })
+    } catch (error) {
+      return response.status(400).send({ statusCode: 400, message: (error as Error).message })
     }
   },
 )
@@ -143,8 +146,8 @@ app.post(
         user: userData,
         token: jwt.sign({ id: user.id }, RequestService.TOKEN_KEY),
       })
-    } catch (error: any) {
-      return response.status(400).send({ statusCode: 400, message: error.message })
+    } catch (error) {
+      return response.status(400).send({ statusCode: 400, message: (error as Error).message })
     }
   },
 )
@@ -169,8 +172,8 @@ app.put(
         email: user.email,
         photoPath: user.photoPath,
       })
-    } catch (error: any) {
-      return response.status(500).send({ statusCode: 500, message: error.message })
+    } catch (error) {
+      return response.status(500).send({ statusCode: 500, message: (error as Error).message })
     }
   },
 )
@@ -187,10 +190,10 @@ app.post(
       const photoFile = (request as MulterRequest).file
       request.body.photoPath = photoFile ? photoFile.path : ''
 
-      const candidate = await CandidatesService.create(request.body, currentUser)
+      const candidate = await CandidatesService.save(new CandidateModel(request.body), currentUser)
       return response.send(candidate)
-    } catch (error: any) {
-      return response.status(500).send({ statusCode: 500, message: error.message })
+    } catch (error) {
+      return response.status(500).send({ statusCode: 500, message: (error as Error).message })
     }
   },
 )
@@ -209,8 +212,8 @@ app.put(
 
       const candidate = await CandidatesService.update(request.params.candidateId, request.body, currentUser)
       return response.send(candidate)
-    } catch (error: any) {
-      return response.status(500).send({ statusCode: 500, message: error.message })
+    } catch (error) {
+      return response.status(500).send({ statusCode: 500, message: (error as Error).message })
     }
   },
 )
@@ -224,8 +227,66 @@ app.delete(
       const { candidateId } = request.params
       await CandidatesService.remove(candidateId, currentUser)
       return response.send('ok')
-    } catch (error: any) {
-      return response.status(500).send({ statusCode: 500, message: error.message })
+    } catch (error) {
+      return response.status(500).send({ statusCode: 500, message: (error as Error).message })
+    }
+  },
+)
+
+app.get(
+  '/templates',
+  checkAccess,
+  async (request: Request, response: Response, next: NextFunction) => {
+    try {
+      const currentUser = storage.get(request)
+      const templates = await TemplatesService.getList(currentUser )
+
+      return response.status(200).json({ templates })
+    } catch (error) {
+      return next(error as Error)
+    }
+  },
+)
+
+app.post(
+  '/templates',
+  checkAccess,
+  async (request: Request, response: Response) => {
+    try {
+      const currentUser = storage.get(request)
+      const template = await TemplatesService.save(new TemplateModel(request.body), currentUser)
+      return response.send(template)
+    } catch (error) {
+      return response.status(500).send({ statusCode: 500, message: (error as Error).message })
+    }
+  },
+)
+
+app.put(
+  '/templates/:templateId',
+  checkAccess,
+  async (request: Request, response: Response) => {
+    try {
+      const currentUser = storage.get(request)
+      const template = await TemplatesService.update(request.params.templateId, request.body, currentUser)
+      return response.send(template)
+    } catch (error) {
+      return response.status(500).send({ statusCode: 500, message: (error as Error).message })
+    }
+  },
+)
+
+app.delete(
+  '/templates/:templateId',
+  checkAccess,
+  async (request: Request, response: Response) => {
+    try {
+      const currentUser = storage.get(request)
+      const { candidateId: templateId } = request.params
+      await TemplatesService.remove(templateId, currentUser)
+      return response.send('ok')
+    } catch (error) {
+      return response.status(500).send({ statusCode: 500, message: (error as Error).message })
     }
   },
 )

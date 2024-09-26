@@ -15,7 +15,7 @@ export default class CandidatesService extends BaseService {
           sql: 'select * from candidates where user_id = ? order by created desc',
           values: [user.id],
         },
-        (error: any, candidatesData: ICandidateDB[]) => {
+        (error, candidatesData: ICandidateDB[]) => {
           if (error) {
             return reject({ message: error.message })
           }
@@ -23,7 +23,8 @@ export default class CandidatesService extends BaseService {
           candidatesData.forEach((candidateDBData: ICandidateDB) => {
             const candidateData: ICandidate = {
               id : candidateDBData.id,
-              name : candidateDBData.name,
+              firstName : candidateDBData.first_name,
+              secondName : candidateDBData.second_name,
               photoPath : candidateDBData.photo_path,
               data : candidateDBData.data,
               created : candidateDBData.created,
@@ -38,11 +39,6 @@ export default class CandidatesService extends BaseService {
   }
 
   static async create (candidateData: ICandidate, user: UserModel): Promise<CandidateModel> {
-    const existentCandidate = await this.findById(String(candidateData.id), user)
-    if (existentCandidate) {
-      throw new Error('Candidate with such an id is already exists')
-    }
-
     const candidate = new CandidateModel(candidateData)
     return CandidatesService.save(candidate, user)
   }
@@ -61,13 +57,14 @@ export default class CandidatesService extends BaseService {
       console.error(error)
     }
 
-    candidate.name = data.name
+    candidate.firstName = data.firstName
+    candidate.secondName = data.secondName
     candidate.data = data.data
     if (data.photoPath) {
       candidate.photoPath = data.photoPath 
     }
 
-    return CandidatesService.save(candidate, user)
+    return this.save(candidate, user)
   }
 
   static async remove (candidateId: string, user: UserModel): Promise<CandidateModel> {
@@ -118,7 +115,8 @@ export default class CandidatesService extends BaseService {
         const candidateDBData = candidatesDBData[0]
         const candidateData: ICandidate = {
           id : candidateDBData.id,
-          name : candidateDBData.name,
+          firstName : candidateDBData.first_name,
+          secondName : candidateDBData.second_name,
           photoPath : candidateDBData.photo_path,
           data : candidateDBData.data,
           created : candidateDBData.created,
@@ -137,7 +135,8 @@ export default class CandidatesService extends BaseService {
 
       if (!candidate.id) {
         const data = {
-          name: candidate.name,
+          first_name: candidate.firstName,
+          second_name: candidate.secondName,
           photo_path: candidate.photoPath,
           data: candidate.data,
           user_id: user.id,
@@ -151,9 +150,9 @@ export default class CandidatesService extends BaseService {
           resolve(candidate)
         })
       } else {
-        const queryParams = [candidate.name, candidate.data, candidate.photoPath, candidate.id]
+        const queryParams = [candidate.firstName, candidate.secondName, candidate.data, candidate.photoPath, candidate.id]
         BaseService.pool.query(
-          'update candidates set name = ?, data = ?, photo_path = ? where id = ?',
+          'update candidates set first_name = ?, second_name = ?, data = ?, photo_path = ? where id = ?',
           queryParams,
           (error: MysqlError | null) => {
             if (error) {
