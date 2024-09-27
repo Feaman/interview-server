@@ -86,9 +86,10 @@ app.get(
   async (request: Request, response: Response, next: NextFunction) => {
     try {
       const currentUser = storage.get(request)
-      const candidates = await CandidatesService.getList(currentUser )
+      const candidates = await CandidatesService.getList(currentUser)
+      const templates = await TemplatesService.getList(currentUser)
 
-      return response.status(200).json({ candidates, user: currentUser })
+      return response.status(200).json({ user: currentUser, candidates, templates })
     } catch (error) {
       return next(error as Error)
     }
@@ -101,6 +102,7 @@ app.post(
     try {
       const currentUser = await UsersService.login(request.body)
       const candidates = await CandidatesService.getList(currentUser)
+      const templates = await TemplatesService.getList(currentUser)
 
       const userData = {
         id: currentUser.id,
@@ -111,9 +113,10 @@ app.post(
       }
 
       response.status(200).json({
-        candidates,
         user: userData,
         token: jwt.sign({ id: currentUser.id }, RequestService.TOKEN_KEY),
+        candidates,
+        templates,
       })
     } catch (error) {
       return response.status(400).send({ statusCode: 400, message: (error as Error).message })
@@ -233,21 +236,6 @@ app.delete(
   },
 )
 
-app.get(
-  '/templates',
-  checkAccess,
-  async (request: Request, response: Response, next: NextFunction) => {
-    try {
-      const currentUser = storage.get(request)
-      const templates = await TemplatesService.getList(currentUser )
-
-      return response.status(200).json({ templates })
-    } catch (error) {
-      return next(error as Error)
-    }
-  },
-)
-
 app.post(
   '/templates',
   checkAccess,
@@ -282,8 +270,7 @@ app.delete(
   async (request: Request, response: Response) => {
     try {
       const currentUser = storage.get(request)
-      const { candidateId: templateId } = request.params
-      await TemplatesService.remove(templateId, currentUser)
+      await TemplatesService.remove(request.params.templateId, currentUser)
       return response.send('ok')
     } catch (error) {
       return response.status(500).send({ statusCode: 500, message: (error as Error).message })

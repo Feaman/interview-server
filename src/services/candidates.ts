@@ -17,7 +17,7 @@ export default class CandidatesService extends BaseService {
         },
         (error, candidatesData: ICandidateDB[]) => {
           if (error) {
-            return reject({ message: error.message })
+            return reject({ message: (error as Error).message })
           }
 
           candidatesData.forEach((candidateDBData: ICandidateDB) => {

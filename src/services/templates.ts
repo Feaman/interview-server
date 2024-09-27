@@ -13,17 +13,21 @@ export default class TemplatesService extends BaseService {
           sql: 'select * from templates where user_id = ? order by created desc',
           values: [user.id],
         },
-        (error: any, templatesData: ITemplateDB[]) => {
+        (error, templatesData: ITemplateDB[]) => {
           if (error) {
             return reject({ message: error.message })
           }
 
           templatesData.forEach((candidateDBData: ITemplateDB) => {
             const templateData: ITemplate = {
-              id : candidateDBData.id,
-              data : candidateDBData.data,
+              id: candidateDBData.id,
+              title: candidateDBData.title,
+              isDefault: candidateDBData.is_default,
+              data: candidateDBData.data,
+              created: candidateDBData.created,
+              updated: candidateDBData.updated,
             }
-            templates.push(new TemplateModel(templateData))
+            templates.push(templateData as TemplateModel)
           })
           
           resolve(templates)
@@ -36,13 +40,20 @@ export default class TemplatesService extends BaseService {
     return TemplatesService.save(new TemplateModel(templateData), user)
   }
 
-  static async update (candidateId: string, data: ITemplate, user: UserModel): Promise<TemplateModel> {
-    const template = await this.findById(candidateId, user)
+  static async update (templateId: string, data: ITemplate, user: UserModel): Promise<TemplateModel> {
+    const template = await this.findById(templateId, user)
     if (!template) {
       throw new Error('Template not found')
     }
 
+    template.title = data.title
     template.data = data.data
+
+    // Handle isDefault
+    if (data.isDefault) {
+      await this.clearDefault(user)
+    }
+    template.isDefault = data.isDefault ? 1 : 0
 
     return this.save(template, user)
   }
@@ -70,11 +81,31 @@ export default class TemplatesService extends BaseService {
         const candidateDBData = candidatesDBData[0]
         const candidateData: ITemplate = {
           id : candidateDBData.id,
+          title: candidateDBData.title,
           data : candidateDBData.data,
+          isDefault: candidateDBData.is_default,
+          created: candidateDBData.created,
+          updated: candidateDBData.updated,
         }
 
         resolve(new TemplateModel(candidateData))
       })
+    })
+  }
+
+  static clearDefault (user: UserModel): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      const queryParams = [user.id]
+      BaseService.pool.query(
+        'update templates set is_default = 0 where user_id = ?',
+        queryParams,
+        (error: MysqlError | null) => {
+          if (error) {
+            return reject(error)
+          }
+          resolve(true)
+        }
+      )
     })
   }
 
@@ -86,7 +117,9 @@ export default class TemplatesService extends BaseService {
 
       if (!template.id) {
         const data = {
+          title: template.title,
           data: template.data,
+          is_default: template.isDefault,
           user_id: user.id,
         }
         BaseService.pool.query('insert into templates set ?', data, (error: MysqlError | null, result: OkPacket) => {
@@ -98,9 +131,9 @@ export default class TemplatesService extends BaseService {
           resolve(template)
         })
       } else {
-        const queryParams = [template.data, template.userId, template.id]
+        const queryParams = [template.title, template.data, template.isDefault, template.id]
         BaseService.pool.query(
-          'update templates set data = ?, user_id = ? where id = ?',
+          'update templates set title = ?, data = ?, is_default = ? where id = ?',
           queryParams,
           (error: MysqlError | null) => {
             if (error) {
