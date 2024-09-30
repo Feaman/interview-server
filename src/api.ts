@@ -2,7 +2,7 @@ import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import CandidateModel from './models/candidate'
-import TemplateModel from './models/template'
+import TemplateModel, { ITemplate } from './models/template'
 import BaseService from './services/base'
 import CandidatesService from './services/candidates'
 import RequestService from './services/request'
@@ -146,6 +146,7 @@ app.post(
 
       response.status(200).json({
         candidates,
+        templates: [],
         user: userData,
         token: jwt.sign({ id: user.id }, RequestService.TOKEN_KEY),
       })
@@ -243,7 +244,14 @@ app.post(
     try {
       const currentUser = storage.get(request)
       const template = await TemplatesService.save(new TemplateModel(request.body), currentUser)
-      return response.send(template)
+      return response.send({
+        id: template.id,
+        title: template.title,
+        data: template.data,
+        isDefault: template.isDefault,
+        created: template.created,
+        updated: template.updated,
+      })
     } catch (error) {
       return response.status(500).send({ statusCode: 500, message: (error as Error).message })
     }
@@ -257,7 +265,14 @@ app.put(
     try {
       const currentUser = storage.get(request)
       const template = await TemplatesService.update(request.params.templateId, request.body, currentUser)
-      return response.send(template)
+      return response.send({
+        id: template.id,
+        title: template.title,
+        data: template.data,
+        isDefault: template.isDefault,
+        created: template.created,
+        updated: template.updated,
+      })
     } catch (error) {
       return response.status(500).send({ statusCode: 500, message: (error as Error).message })
     }

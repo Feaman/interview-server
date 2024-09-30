@@ -25,7 +25,6 @@ const rules = {
   title: 'required|string',
   isDefault: 'numeric',
   data: 'required|string',
-  userId: 'required|numeric',
 }
 
 type ValidationKeys = keyof typeof rules
@@ -46,7 +45,7 @@ export default class TemplateModel extends BaseModel {
     this.id = data.id
     this.title = data.title
     this.data = data.data
-    this.isDefault = data.isDefault || 0
+    this.isDefault = data.isDefault ? 1 : 0
     this.userId = data.userId || 0
     this.created = data.created
     this.updated = data.updated

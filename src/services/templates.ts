@@ -15,7 +15,7 @@ export default class TemplatesService extends BaseService {
         },
         (error, templatesData: ITemplateDB[]) => {
           if (error) {
-            return reject({ message: error.message })
+            return reject({ message: (error as Error).message })
           }
 
           templatesData.forEach((candidateDBData: ITemplateDB) => {
@@ -111,6 +111,7 @@ export default class TemplatesService extends BaseService {
 
   static save (template: TemplateModel, user: UserModel): Promise<TemplateModel> {
     return new Promise((resolve, reject) => {
+      console.log(template)
       if (!template.validate()) {
         return reject(new Error('Template validation failed'))
       }

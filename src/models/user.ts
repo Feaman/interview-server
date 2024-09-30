@@ -23,7 +23,7 @@ export interface IUserDB {
 const rules = {
   id: 'numeric',
   firstName: 'required|string',
-  secondName: 'required|string',
+  secondName: 'string',
   email: 'required|email',
   photoPath: 'string',
   password: 'string',
