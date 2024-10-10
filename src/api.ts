@@ -21,8 +21,8 @@ interface MulterRequest extends Request { file: { path: string } }
 
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
-app.use('/files', express.static(filesPath))
 app.use(cors())
+app.use('/files', express.static(filesPath))
 app.listen(PORT, async function () {
   console.log(`STARTED on port ${PORT}`)
 })
