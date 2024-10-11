@@ -15,7 +15,7 @@ export default class CandidatesService extends BaseService {
           sql: 'select * from candidates where user_id = ? order by created desc',
           values: [user.id],
         },
-        (error, candidatesData: ICandidateDB[]) => {
+        (error: Error, candidatesData: ICandidateDB[]) => {
           if (error) {
             return reject({ message: (error as Error).message })
           }
@@ -74,7 +74,9 @@ export default class CandidatesService extends BaseService {
     }
 
     try {
-      fs.unlinkSync(candidate.photoPath)
+      if (candidate.photoPath) {
+        fs.unlinkSync(candidate.photoPath)
+      }
     } catch (error) {
       console.error(error)
     }
@@ -128,7 +130,7 @@ export default class CandidatesService extends BaseService {
   }
 
   static save (candidate: CandidateModel, user: UserModel): Promise<CandidateModel> {
-    return new Promise((resolve, reject) => {
+    const queryPromise: Promise<CandidateModel> = new Promise((resolve, reject) => {
       if (!candidate.validate()) {
         return reject(new Error('Candidate validation failed'))
       }
@@ -163,5 +165,16 @@ export default class CandidatesService extends BaseService {
         )
       }
     })
+
+    return queryPromise
+      .then((candidate: CandidateModel): Promise<ICandidate | null> => {
+        return this.findById(String(candidate.id), user)
+      })
+      .then((candidateData: ICandidate | null) => {
+        if (!candidateData) {
+          throw new Error('Candidate not found')
+        }
+        return new CandidateModel(candidateData)
+      })
   }
 }
