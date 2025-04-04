@@ -2,7 +2,7 @@ import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import CandidateModel from './models/candidate'
-import TemplateModel, { ITemplate } from './models/template'
+import TemplateModel from './models/template'
 import BaseService from './services/base'
 import CandidatesService from './services/candidates'
 import RequestService from './services/request'
@@ -15,7 +15,7 @@ const app = express()
 const path = require('path')
 const storage = new WeakMap()
 const fs = require('fs')
-const filesPath = 'files'
+const filesPath = __dirname + '/files'
 
 interface MulterRequest extends Request { file: { path: string } }
 
