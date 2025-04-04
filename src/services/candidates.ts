@@ -51,7 +51,7 @@ export default class CandidatesService extends BaseService {
 
     try {
       if (data.photoPath && candidate.photoPath) {
-        fs.unlinkSync(candidate.photoPath)
+        fs.unlinkSync(__dirname + '/' + candidate.photoPath)
       }
     } catch (error) {
       console.error(error)
@@ -75,7 +75,7 @@ export default class CandidatesService extends BaseService {
 
     try {
       if (candidate.photoPath) {
-        fs.unlinkSync(candidate.photoPath)
+        fs.unlinkSync(__dirname + '/' + candidate.photoPath)
       }
     } catch (error) {
       console.error(error)

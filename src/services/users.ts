@@ -22,7 +22,7 @@ export default class UsersService extends BaseService {
 
     try {
       if (data.photoPath && user.photoPath) {
-        fs.unlinkSync(user.photoPath)
+        fs.unlinkSync(__dirname + '/' + user.photoPath)
       }
     } catch (error) {
       console.error(error)

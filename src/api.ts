@@ -167,6 +167,9 @@ app.put(
       // Photo
       const photoFile = (request as MulterRequest).file
       request.body.photoPath = photoFile ? photoFile.path : ''
+      if (photoFile) {
+        request.body.photoPath = photoFile.path.replace(__dirname + '/', '')
+      }
 
       const user = await UsersService.update(request.body, currentUser)
       return response.send({
@@ -192,7 +195,9 @@ app.post(
 
       // Photo
       const photoFile = (request as MulterRequest).file
-      request.body.photoPath = photoFile ? photoFile.path : ''
+      if (photoFile) {
+        request.body.photoPath = photoFile.path.replace(__dirname + '/', '')
+      }
 
       const candidate = await CandidatesService.save(new CandidateModel(request.body), currentUser)
       return response.send(candidate)
