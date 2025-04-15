@@ -12,10 +12,9 @@ import UsersService from './services/users'
 const PORT = 3016
 const multer  = require('multer')
 const app = express()
-const path = require('path')
 const storage = new WeakMap()
 const fs = require('fs')
-const filesPath = __dirname + '/files'
+const filesPath = 'files'
 
 interface MulterRequest extends Request { file: { path: string } }
 
@@ -24,7 +23,7 @@ app.use(express.urlencoded({ extended: true })) // for parsing application/x-www
 app.use(cors())
 app.use('/files', express.static(filesPath))
 app.listen(PORT, async function () {
-  console.log(`STARTED on port ${PORT}`)
+  console.log(`INTERVIEW server started on port ${PORT}`)
 })
 
 
@@ -39,10 +38,9 @@ const filesStorage = multer.diskStorage({
 
     callback(null, folderPath)
   },
-  filename: function (_request: Request, file: { originalname: string }, callback: (error: null, path: string) => void) {
+  filename: function (_request: Request, file: { originalname: string, fieldname: string }, callback: (error: null, path: string) => void) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    const extension = path.extname(file.originalname)
-    callback(null, `${uniqueSuffix}${extension}`)
+    callback(null, `${file.fieldname}--${uniqueSuffix}__${file.originalname}`)
   }
 })
 const upload = multer({ storage: filesStorage })
@@ -168,7 +166,7 @@ app.put(
       const photoFile = (request as MulterRequest).file
       request.body.photoPath = photoFile ? photoFile.path : ''
       if (photoFile) {
-        request.body.photoPath = photoFile.path.replace(__dirname + '/', '')
+        request.body.photoPath = photoFile.path
       }
 
       const user = await UsersService.update(request.body, currentUser)
@@ -196,7 +194,7 @@ app.post(
       // Photo
       const photoFile = (request as MulterRequest).file
       if (photoFile) {
-        request.body.photoPath = photoFile.path.replace(__dirname + '/', '')
+        request.body.photoPath = photoFile.path
       }
 
       const candidate = await CandidatesService.save(new CandidateModel(request.body), currentUser)
