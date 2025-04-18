@@ -60,7 +60,7 @@ const filesStorage = multer.diskStorage({
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
     const parts = file.originalname.split('.')
     const fileExtension = parts[1] || ''
-    callback(null, `${uniqueSuffix}__${cryptoModule.randomBytes(64).toString('hex')}.${fileExtension}`)
+    callback(null, `${uniqueSuffix}__${cryptoModule.randomBytes(24).toString('hex')}.${fileExtension}`)
   }
 })
 const upload = multer({ storage: filesStorage })
