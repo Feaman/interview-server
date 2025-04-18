@@ -2,9 +2,11 @@ import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
 import jwt from 'jsonwebtoken'
 import CandidateModel from './models/candidate'
+import FileModel, { IFile } from './models/file'
 import TemplateModel from './models/template'
 import BaseService from './services/base'
 import CandidatesService from './services/candidates'
+import FilesService from './services/files'
 import RequestService from './services/request'
 import TemplatesService from './services/templates'
 import UsersService from './services/users'
@@ -16,7 +18,15 @@ const storage = new WeakMap()
 const fs = require('fs')
 const filesPath = 'files'
 
-interface MulterRequest extends Request { file: { path: string } }
+interface MulterRequest extends Request {
+  file: {
+    path: string,
+    mimetype: string,
+    originalname: string,
+    size: number,
+    fieldname: string
+  }
+}
 
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
@@ -86,8 +96,9 @@ app.get(
       const currentUser = storage.get(request)
       const candidates = await CandidatesService.getList(currentUser)
       const templates = await TemplatesService.getList(currentUser)
+      const files = await FilesService.getList(currentUser)
 
-      return response.status(200).json({ user: currentUser, candidates, templates })
+      return response.status(200).json({ user: currentUser, candidates, templates, files })
     } catch (error) {
       return next(error as Error)
     }
@@ -101,6 +112,7 @@ app.post(
       const currentUser = await UsersService.login(request.body)
       const candidates = await CandidatesService.getList(currentUser)
       const templates = await TemplatesService.getList(currentUser)
+      const files = await FilesService.getList(currentUser)
 
       const userData = {
         id: currentUser.id,
@@ -115,6 +127,7 @@ app.post(
         token: jwt.sign({ id: currentUser.id }, RequestService.TOKEN_KEY),
         candidates,
         templates,
+        files,
       })
     } catch (error) {
       return response.status(400).send({ statusCode: 400, message: (error as Error).message })
@@ -289,6 +302,92 @@ app.delete(
     try {
       const currentUser = storage.get(request)
       await TemplatesService.remove(request.params.templateId, currentUser)
+      return response.send('ok')
+    } catch (error) {
+      return response.status(500).send({ statusCode: 500, message: (error as Error).message })
+    }
+  },
+)
+
+app.post(
+  '/files',
+  checkAccess,
+  upload.single('file'),
+  async (request: Request, response: Response) => {
+    try {
+      const currentUser = storage.get(request)
+
+      // File
+      const multerFile = (request as MulterRequest).file
+      if (!multerFile) {
+        throw new Error('Binary file not send')
+      }
+
+      const fileData: IFile = {
+        id: 0,
+        name: multerFile.originalname,
+        mimeType: multerFile.mimetype,
+        size: multerFile.size,
+        path: multerFile.path,
+      }
+
+      const file = await FilesService.save(new FileModel(fileData), currentUser)
+      return response.send({
+        id: file.id,
+        name: file.name,
+        mimeType: file.mimeType,
+        size: file.size,
+        path: file.path,
+      })
+    } catch (error) {
+      return response.status(500).send({ statusCode: 500, message: (error as Error).message })
+    }
+  },
+)
+
+app.put(
+  '/files/:fileId',
+  checkAccess,
+  upload.single('file'),
+  async (request: Request, response: Response) => {
+    try {
+      const currentUser = storage.get(request)
+
+      // File
+      const multerFile = (request as MulterRequest).file
+      if (!multerFile) {
+        throw new Error('Binary file not send')
+      }
+
+      const fileData: IFile = {
+        id: 0,
+        name: multerFile.originalname,
+        mimeType: multerFile.mimetype,
+        size: multerFile.size,
+        path: multerFile.path,
+      }
+
+      const file = await FilesService.update(request.params.fileId, fileData, currentUser)
+      return response.send({
+        id: file.id,
+        name: file.name,
+        mimeType: file.mimeType,
+        size: file.size,
+        path: file.path,
+      })
+    } catch (error) {
+      return response.status(500).send({ statusCode: 500, message: (error as Error).message })
+    }
+  },
+)
+
+app.delete(
+  '/files/:fileId',
+  checkAccess,
+  async (request: Request, response: Response) => {
+    try {
+      const currentUser = storage.get(request)
+      await FilesService.remove(request.params.fileId, currentUser)
       return response.send('ok')
     } catch (error) {
       return response.status(500).send({ statusCode: 500, message: (error as Error).message })

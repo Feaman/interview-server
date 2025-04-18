@@ -13,7 +13,7 @@ export default class TemplatesService extends BaseService {
           sql: 'select * from templates where user_id = ? order by created desc',
           values: [user.id],
         },
-        (error, templatesData: ITemplateDB[]) => {
+        (error: Error, templatesData: ITemplateDB[]) => {
           if (error) {
             return reject({ message: (error as Error).message })
           }
@@ -111,7 +111,6 @@ export default class TemplatesService extends BaseService {
 
   static save (template: TemplateModel, user: UserModel): Promise<TemplateModel> {
     return new Promise((resolve, reject) => {
-      console.log(template)
       if (!template.validate()) {
         return reject(new Error('Template validation failed'))
       }
