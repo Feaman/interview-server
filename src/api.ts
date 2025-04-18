@@ -17,6 +17,7 @@ const app = express()
 const storage = new WeakMap()
 const fs = require('fs')
 const filesPath = 'files'
+const cryptoModule = require('crypto')
 
 interface MulterRequest extends Request {
   file: {
@@ -39,7 +40,14 @@ app.listen(PORT, async function () {
 
 const filesStorage = multer.diskStorage({
   destination: function (request: Request, _file: File, callback: (error: null, path: string) => void) {
-    const entityFolderPath = request.originalUrl.includes('/candidates') ? 'candidates' : 'users'
+    let entityFolderPath = ''
+    if (request.originalUrl.includes('/candidates')) {
+      entityFolderPath = 'candidates'
+    } else if (request.originalUrl.includes('/files')) {
+      entityFolderPath = 'files'
+    } else if (request.originalUrl.includes('/users')) {
+      entityFolderPath = 'users'
+    }
     const folderPath = `${filesPath}/${entityFolderPath}/`
 
     if (!fs.existsSync(folderPath)){
@@ -50,7 +58,9 @@ const filesStorage = multer.diskStorage({
   },
   filename: function (_request: Request, file: { originalname: string, fieldname: string }, callback: (error: null, path: string) => void) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    callback(null, `${file.fieldname}--${uniqueSuffix}__${file.originalname}`)
+    const parts = file.originalname.split('.')
+    const fileExtension = parts[1] || ''
+    callback(null, `${uniqueSuffix}__${cryptoModule.randomBytes(64).toString('hex')}.${fileExtension}`)
   }
 })
 const upload = multer({ storage: filesStorage })
@@ -325,7 +335,8 @@ app.post(
 
       const fileData: IFile = {
         id: 0,
-        name: multerFile.originalname,
+        name: request.body.name,
+        originalName: Buffer.from(multerFile.originalname, 'latin1').toString('utf8'),
         mimeType: multerFile.mimetype,
         size: multerFile.size,
         path: multerFile.path,
@@ -335,6 +346,7 @@ app.post(
       return response.send({
         id: file.id,
         name: file.name,
+        originalName: file.originalName,
         mimeType: file.mimeType,
         size: file.size,
         path: file.path,
@@ -361,7 +373,8 @@ app.put(
 
       const fileData: IFile = {
         id: 0,
-        name: multerFile.originalname,
+        name: request.body.name,
+        originalName: Buffer.from(multerFile.originalname, 'latin1').toString('utf8'),
         mimeType: multerFile.mimetype,
         size: multerFile.size,
         path: multerFile.path,
@@ -371,6 +384,7 @@ app.put(
       return response.send({
         id: file.id,
         name: file.name,
+        originalName: file.originalName,
         mimeType: file.mimeType,
         size: file.size,
         path: file.path,

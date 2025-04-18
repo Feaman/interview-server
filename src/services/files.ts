@@ -3,6 +3,8 @@ import FileModel, { IFile, IFileDB } from '~/models/file'
 import UserModel from '~/models/user'
 import BaseService from '~/services/base'
 
+const fs = require('fs')
+
 export default class FilesService extends BaseService {
   static async getList (user: UserModel): Promise<FileModel[]> {
     return new Promise((resolve, reject) => {
@@ -22,6 +24,7 @@ export default class FilesService extends BaseService {
             const fileData: IFile = {
               id: fileDBData.id,
               name: fileDBData.name,
+              originalName: fileDBData.original_name,
               mimeType: fileDBData.mime_type,
               size: fileDBData.size,
               path: fileDBData.path,
@@ -46,6 +49,7 @@ export default class FilesService extends BaseService {
     }
 
     file.name = data.name
+    file.originalName = data.originalName
     file.mimeType = data.mimeType
     file.size = data.size
     file.path = data.path
@@ -77,6 +81,7 @@ export default class FilesService extends BaseService {
         const candidateData: IFile = {
           id : fileDBData.id,
           name: fileDBData.name,
+          originalName: fileDBData.original_name,
           mimeType: fileDBData.mime_type,
           size: fileDBData.size,
           path: fileDBData.path,
@@ -112,7 +117,8 @@ export default class FilesService extends BaseService {
       if (!file.id) {
         const data = {
           name: file.name,
-          mimeType: file.mimeType,
+          original_name: file.originalName,
+          mime_type: file.mimeType,
           size: file.size,
           path: file.path,
           user_id: user.id,
@@ -126,9 +132,9 @@ export default class FilesService extends BaseService {
           resolve(file)
         })
       } else {
-        const queryParams = [file.name, file.size, file.mimeType, file.path, file.id]
+        const queryParams = [file.name, file.originalName, file.size, file.mimeType, file.path, file.id]
         BaseService.pool.query(
-          'update files set name = ?, size = ?, mime_type = ?, path = ? where id = ?',
+          'update files set name = ?, original_name = ?, size = ?, mime_type = ?, path = ? where id = ?',
           queryParams,
           (error: MysqlError | null) => {
             if (error) {
@@ -145,6 +151,14 @@ export default class FilesService extends BaseService {
     const file = await this.findById(fileId, user)
     if (!file) {
       throw new Error('File not found')
+    }
+
+    try {
+      if (file.path) {
+        fs.unlinkSync(__dirname + '/' + file.path)
+      }
+    } catch (error) {
+      console.error(error)
     }
 
     return new Promise((resolve, reject) => {
