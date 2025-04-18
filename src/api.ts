@@ -367,18 +367,15 @@ app.put(
 
       // File
       const multerFile = (request as MulterRequest).file
-      if (!multerFile) {
-        throw new Error('Binary file not send')
-      }
 
-      const fileData: IFile = {
-        id: 0,
-        name: request.body.name,
-        originalName: Buffer.from(multerFile.originalname, 'latin1').toString('utf8'),
-        mimeType: multerFile.mimetype,
-        size: multerFile.size,
-        path: multerFile.path,
-      }
+      const fileData: IFile = { 
+          id: 0,
+          name: request.body.name,
+          originalName: multerFile ? Buffer.from(multerFile.originalname, 'latin1').toString('utf8') : '',
+          mimeType: multerFile ? multerFile.mimetype : '',
+          size: multerFile ? multerFile.size : 0,
+          path: multerFile ? multerFile.path : '',
+       }
 
       const file = await FilesService.update(request.params.fileId, fileData, currentUser)
       return response.send({

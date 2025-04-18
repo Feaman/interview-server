@@ -49,10 +49,10 @@ export default class FilesService extends BaseService {
     }
 
     file.name = data.name
-    file.originalName = data.originalName
-    file.mimeType = data.mimeType
-    file.size = data.size
-    file.path = data.path
+    file.originalName = data.originalName || file.originalName
+    file.mimeType = data.mimeType || file.mimeType
+    file.size = data.size || file.size
+    file.path = data.path || file.path
 
     return this.save(file, user)
   }
